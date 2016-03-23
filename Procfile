@@ -1,1 +1,1 @@
-web: java -cp target/classes:target/dependency/* App
+web: java -cp target/classes:target/dependency/* co.ianh.kstool_jetty.App

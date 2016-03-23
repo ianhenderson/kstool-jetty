@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import co.ianh.kstool_jetty.Utils;
+import static co.ianh.kstool_jetty.Utils.getPort;
 
 /**
  * Created by henderson_i on 3/22/16.
@@ -25,7 +25,7 @@ public class App extends AbstractHandler {
     }
 
     public static void main(String[] args) throws Exception {
-        int port = Utils.getPort();
+        int port = getPort();
         Server server = new Server(port);
         server.setHandler(new App());
         server.start();
