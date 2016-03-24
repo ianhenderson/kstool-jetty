@@ -21,7 +21,8 @@ public class Handler extends AbstractHandler {
     {
         response.setContentType("text/html; charset=utf-8");
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println("Sup, beautiful world.");
+        response.getWriter().println("Sup, beautiful world.\r\n");
+        response.getWriter().println("You requested: " + target);
         baseRequest.setHandled(true);
     }
 
