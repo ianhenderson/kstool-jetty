@@ -5,6 +5,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 
+import static co.ianh.kstool_jetty.Utils.getHost;
 import static co.ianh.kstool_jetty.Utils.getPort;
 
 /**
@@ -13,19 +14,40 @@ import static co.ianh.kstool_jetty.Utils.getPort;
 public class App {
 
     public static void main(String[] args) throws Exception {
-        HandlerList handlers = new HandlerList();
-//        handlers.setHandlers(new Handler[] { new co.ianh.kstool_jetty.Handler(), new FileServer().build()});
-        handlers.setHandlers(new Handler[] { new FileServer().build()});
 
+        // List of handlers
+        Handler[] handlers = {
+             new co.ianh.kstool_jetty.Handler(),
+             FileServer.build()
+        };
+
+        // Build handlerList
+        HandlerList handlerList = new HandlerList();
+        handlerList.setHandlers(handlers);
+
+        // Add gzip to responses
         GzipHandler gzip = new GzipHandler();
-        gzip.setHandler(handlers);
+        gzip.setHandler(handlerList);
 
+        // Get environment variables
         int port = getPort();
-        Server server = new Server(port);
+        String host = getHost();
+
+        // Server
+        Server server = new Server();
+
+        // HTTP Connector
+        ServerConnector http = new ServerConnector(server);
+        http.setPort(port);
+        http.setHost(host);
+
+        // Set connector
+        server.addConnector(http);
+
+        // Set handler
         server.setHandler(gzip);
 
-
-//        server.setHandler(new Handler());
+        // Start server
         server.start();
         server.join();
     }
