@@ -3,6 +3,7 @@ package co.ianh.kstool_jetty;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 
@@ -33,20 +34,13 @@ public class App {
     }
 
     private static Handler buildContext() throws Exception {
-        // Hello handler
-        Handler hello = new co.ianh.kstool_jetty.Handler();
 
-        // Fileserver handler
-        ResourceHandler fs = FileServer.build();
-
-        // Create contextHandler for /api
-        ContextHandler context = new ContextHandler();
-        context.setContextPath("/api");
-        context.setHandler(hello);
+        // Build up contexts to be handled
+        ContextHandlerCollection contexts = buildContexts();
 
         // Add gzip to responses
         GzipHandler gzip = new GzipHandler();
-        gzip.setHandler(context);
+        gzip.setHandler(contexts);
 
         return gzip;
     }
@@ -65,6 +59,35 @@ public class App {
         server.addConnector(http);
 
         return http; // TODO: is this even necessary?
+    }
+
+    private static ContextHandlerCollection buildContexts() throws Exception {
+        // Hello handler
+        Handler hello = new co.ianh.kstool_jetty.Handler();
+
+        // Fileserver handler
+        ResourceHandler fs = FileServer.build();
+
+        // Create contextHandler for /
+        ContextHandler helloContext = new ContextHandler();
+        helloContext.setContextPath("/");
+        helloContext.setHandler(hello);
+
+        // Create contextHandler for /files
+        ContextHandler fileContext = new ContextHandler();
+        fileContext.setContextPath("/files");
+        fileContext.setHandler(fs);
+
+        Handler[] handlers = {
+                helloContext,
+                fileContext
+        };
+
+        // Create collection of contexts
+        ContextHandlerCollection contexts = new ContextHandlerCollection();
+        contexts.setHandlers(handlers);
+
+        return contexts;
     }
 
 }
