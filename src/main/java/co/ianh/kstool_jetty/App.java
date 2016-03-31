@@ -1,7 +1,8 @@
 package co.ianh.kstool_jetty;
 
-import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -34,7 +35,6 @@ public class App {
     }
 
     private static Handler buildContext() throws Exception {
-
         // Build up contexts to be handled
         ContextHandlerCollection contexts = buildContexts();
 
