@@ -18,7 +18,7 @@ public class Utils {
                 Integer.parseInt(SYS_PORT) :
                 (!isEmpty(ENV_PORT)) ?
                         Integer.parseInt(ENV_PORT) :
-                        8080;
+                        8000;
         return port;
     }
 

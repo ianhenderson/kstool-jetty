@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
 
 import static co.ianh.kstool_jetty.Utils.getHost;
 import static co.ianh.kstool_jetty.Utils.getPort;
@@ -24,10 +25,10 @@ public class App {
         configureConnector(server);
 
         // Build context
-        Handler context = buildContext();
+        Handler servletHandler = buildServletHandler();
 
         // Set handler
-        server.setHandler(context);
+        server.setHandler(servletHandler);
 
         // Start server
         server.start();
@@ -88,6 +89,13 @@ public class App {
         contexts.setHandlers(handlers);
 
         return contexts;
+    }
+
+    private static Handler buildServletHandler() throws Exception {
+        ServletHandler handler = new ServletHandler();
+        handler.addServletWithMapping(HelloServlet.class, "/bob/*");
+        handler.addServletWithMapping(GoodbyeServlet.class, "/*");
+        return handler;
     }
 
 }
