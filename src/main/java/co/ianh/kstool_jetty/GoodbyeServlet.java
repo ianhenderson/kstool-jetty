@@ -14,6 +14,7 @@ public class GoodbyeServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text");
         resp.setStatus(HttpServletResponse.SC_OK);
+        DataAccessLayer.initTables();
         resp.getWriter().println("You even code, bruh?");
     }
 }
