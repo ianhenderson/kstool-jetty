@@ -14,12 +14,11 @@ public class DataAccessLayer {
     // Set up DB connection
     public static void makeConnection() {
         try {
-            if (c != null) { // connection already established
-                return;
+            if (c == null || c.isClosed()) { // connection already established
+                Class.forName("org.sqlite.JDBC");
+                c = DriverManager.getConnection("jdbc:sqlite:test.db");
+                c.setAutoCommit(false);
             }
-            Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:test.db");
-            c.setAutoCommit(false);
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.exit(0);
