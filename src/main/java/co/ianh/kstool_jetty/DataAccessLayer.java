@@ -1,9 +1,7 @@
 package co.ianh.kstool_jetty;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.HashMap;
 
 /**
  * Created by henderson_i on 4/4/16.
@@ -12,6 +10,7 @@ public class DataAccessLayer {
 
     private static Connection c = makeConnection();
     private static final String DB_URL = "jdbc:sqlite:test.db";
+    private static HashMap<String, PreparedStatement> stmtCache = buildStatements();
 
     // Set up DB connection
     private static Connection makeConnection() {
@@ -27,6 +26,7 @@ public class DataAccessLayer {
         return c;
     }
 
+    // Build basic schema
     public static void initTables() {
         Statement stmt = null;
         try {
@@ -57,4 +57,51 @@ public class DataAccessLayer {
         System.out.println("Created DB tables!");
     }
 
+    // Create cache of prepared statements
+    private static HashMap<String, PreparedStatement> buildStatements() {
+        HashMap<String, PreparedStatement> stmtCache = null;
+
+        try {
+            stmtCache.put( "addKanji",
+                    c.prepareStatement("INSERT OR IGNORE INTO kanji (kanji) VALUES (?)")
+            );
+            stmtCache.put( "addKanjiWords",
+                    c.prepareStatement("INSERT OR IGNORE INTO kanji_words (kanji, word_id) VALUES (?, ?)")
+            );
+            stmtCache.put( "addKanjiWords_",
+                    c.prepareStatement("INSERT OR IGNORE INTO kanji_words (kanji, word_id) SELECT ? words.id FROM words WHERE words.word = ?")
+            );
+            stmtCache.put( "addSeenWords",
+                    c.prepareStatement("INSERT INTO seen_words (user_id, word_id) VALUES (?, ?)")
+            );
+            stmtCache.put( "addSeenWords_",
+                    c.prepareStatement("INSERT INTO seen_words (user_id, word_id) SELECT ?, words.id FROM words WHERE words.word = ?")
+            );
+            stmtCache.put( "addSeenKanji",
+                    c.prepareStatement("INSERT INTO seen_kanji (user_id, kanji) VALUES (?, ?)")
+            );
+            stmtCache.put( "addWordToWordsTable",
+                    c.prepareStatement("INSERT OR IGNORE INTO words (word) VALUES (?)")
+            );
+            stmtCache.put( "getRelatedWords",
+                    c.prepareStatement("SELECT kanji, word FROM kanji_words AS kw, words AS w, seen_words AS sw WHERE kw.kanji = ? AND kw.word_id = w.id AND kw.word_id = sw.word_id AND sw.user_id = ?")
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return stmtCache;
+    }
+
+
+    public static int addKanji(String kanji) throws SQLException {
+        PreparedStatement stmt = null;
+        int updatedRows = 0;
+
+        stmt = stmtCache.get("addKanji");
+        stmt.setString(1, kanji);
+        updatedRows = stmt.executeUpdate();
+
+        return updatedRows;
+    }
 }
