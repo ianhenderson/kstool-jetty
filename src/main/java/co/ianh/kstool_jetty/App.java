@@ -93,8 +93,17 @@ public class App {
 
     private static Handler buildServletHandler() throws Exception {
         ServletHandler handler = new ServletHandler();
-        handler.addServletWithMapping(HelloServlet.class, "/bob/*");
-        handler.addServletWithMapping(GoodbyeServlet.class, "/*");
+//        handler.addServletWithMapping(HelloServlet.class, "/bob/*");
+//        handler.addServletWithMapping(GoodbyeServlet.class, "/*");
+
+        // Routes
+        handler.addServletWithMapping(KanjiServlet.class, "/kanji");
+        handler.addServletWithMapping(FactsServlet.class, "/facts");
+        handler.addServletWithMapping(SignupServlet.class, "/signup");
+        handler.addServletWithMapping(LoginServlet.class, "/login");
+        handler.addServletWithMapping(LogoutServlet.class, "/logout");
+
+
         return handler;
     }
 
