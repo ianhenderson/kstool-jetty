@@ -18,6 +18,11 @@ import static co.ianh.kstool_jetty.Utils.getPort;
 public class App {
 
     public static void main(String[] args) throws Exception {
+        Server server = makeServer();
+        server.join();
+    }
+
+    public static Server makeServer() throws Exception {
         // Instantiate server
         Server server = new Server();
 
@@ -32,7 +37,7 @@ public class App {
 
         // Start server
         server.start();
-        server.join();
+        return server;
     }
 
     private static Handler buildContext() throws Exception {
