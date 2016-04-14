@@ -20,7 +20,7 @@ import java.net.URISyntaxException;
 /**
  * Created by henderson_i on 4/12/16.
  */
-public class IntegrationTests {
+public class AppTest {
 
     static CloseableHttpClient client;
     static Server app;
