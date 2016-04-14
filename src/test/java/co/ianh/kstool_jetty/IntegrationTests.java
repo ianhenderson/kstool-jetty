@@ -3,12 +3,15 @@ package co.ianh.kstool_jetty;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.jetty.server.Server;
 import org.junit.*;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Created by henderson_i on 4/12/16.
@@ -17,6 +20,8 @@ public class IntegrationTests {
 
     static CloseableHttpClient client;
     static Server app;
+    String HOSTNAME = "localhost";
+    int PORT = 8000;
 
     // Start up server
     @BeforeClass
@@ -28,37 +33,44 @@ public class IntegrationTests {
     // Shut down server
     @AfterClass
     public static void tearDown() throws Exception {
-        System.out.println("Tore down, brah.");
+        System.out.println("All tore down, brah.");
         app.stop();
     }
 
-    // Helper method to make http GET requests.
-    private int getStatusCode(String url) throws IOException {
-        HttpGet get = new HttpGet(url);
-        HttpResponse response = client.execute(get);
-        int status = response.getStatusLine().getStatusCode();
-        return status;
+    /* Helper methods */
+
+    private URI buildURI(String url) throws URISyntaxException {
+        return new URIBuilder()
+                .setScheme("http")
+                .setHost(HOSTNAME)
+                .setPort(PORT)
+                .setPath(url)
+                .build();
     }
 
-    // Helper method to make http POST requests.
-    private int postStatusCode(String url) throws IOException {
-        HttpPost post = new HttpPost(url);
-        HttpResponse response = client.execute(post);
-        int status = response.getStatusLine().getStatusCode();
-        return status;
+    private HttpResponse doGET(String url) throws IOException, URISyntaxException {
+        URI uri = buildURI(url);
+        HttpGet get = new HttpGet(uri);
+        return client.execute(get);
+    }
+
+    private HttpResponse doPOST(String url) throws IOException, URISyntaxException {
+        URI uri = buildURI(url);
+        HttpPost post = new HttpPost(uri);
+        return client.execute(post);
     }
 
     /* Integration tests */
 
     @Test
     public void getFacts() throws Exception {
-        int status = getStatusCode("http://localhost:8000/facts");
+        int status = doGET("/facts").getStatusLine().getStatusCode();
         Assert.assertEquals(200, status);
     }
 
     @Test
     public void postLogin() throws Exception {
-        int status = postStatusCode("http://localhost:8000/login");
+        int status = doPOST("/login").getStatusLine().getStatusCode();
         Assert.assertEquals(200, status);
     }
 
