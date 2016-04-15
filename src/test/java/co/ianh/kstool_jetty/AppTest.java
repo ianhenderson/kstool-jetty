@@ -57,15 +57,18 @@ public class AppTest {
         // Start up server
         @Before
         public void setUp() throws Exception {
+            System.out.println("Setting up server instance...");
             app = App.makeServer();
             client = HttpClients.createDefault();
+            System.out.println("Setting up server instance: Done!");
         }
 
         // Shut down server
         @After
         public void tearDown() throws Exception {
-            System.out.println("All tore down, brah.");
+            System.out.println("Tearing down server instance...");
             app.stop();
+            System.out.println("Tearing down server instance: Done!");
         }
 
         /* Helper methods */
@@ -103,21 +106,20 @@ public class AppTest {
             return client.execute(post);
         }
 
-
     }
 
     @FixMethodOrder(MethodSorters.NAME_ASCENDING)
     public static class NonParameterizedTests extends SharedSetup{
 
         @Test
-        public void getKanjiWithoutSession() throws Exception {
+        public void a_getKanjiWithoutSession() throws Exception {
             int status = doGET("/api/kanji").getStatusLine().getStatusCode();
 
             Assert.assertEquals(403, status);
         }
 
         @Test
-        public void signUp() throws Exception {
+        public void b_signUp() throws Exception {
             String expectedResponseBody = factory.createObjectBuilder()
                     .add("id", 1)
                     .add("name", newUser1.get("username"))
@@ -133,7 +135,7 @@ public class AppTest {
         }
 
         @Test
-        public void signInWithWrongInfo() throws Exception {
+        public void c_signInWithWrongInfo() throws Exception {
             JsonObject wrongInfo = factory.createObjectBuilder()
                     .add("username", newUser1.get("username"))
                     .add("password", "abcdefg")
@@ -146,7 +148,7 @@ public class AppTest {
         }
 
         @Test
-        public void signInWithCorrectInfo() throws Exception {
+        public void d_signInWithCorrectInfo() throws Exception {
             JsonObject correctInfo = factory.createObjectBuilder()
                     .add("username", newUser1.get("username"))
                     .add("password", newUser1.get("password"))
@@ -167,7 +169,7 @@ public class AppTest {
         }
 
         @Test
-        public void getKanjiWhenListIsEmpty() throws Exception {
+        public void e_getKanjiWhenListIsEmpty() throws Exception {
             HttpResponse response = doGET("/api/kanji");
             int status = response.getStatusLine().getStatusCode();
 
@@ -175,45 +177,26 @@ public class AppTest {
         }
 
         @Test
-        public void addWords() throws Exception {
+        public void f_addWords() throws Exception {
             JsonObject fact = factory.createObjectBuilder()
                     .add("fact", newUser1.get("fact"))
                     .build();
 
-            HttpResponse response = doPOST("api/facts", fact);
+            HttpResponse response = doPOST("/api/facts", fact);
             int status = response.getStatusLine().getStatusCode();
 
             Assert.assertEquals(201, status);
         }
 
-    }
-
-    @RunWith(Parameterized.class)
-    @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-    public static class ParameterizedTests extends SharedSetup{
-
-        private String parameterizedKanji;
-
-        @Parameterized.Parameters(name = "getNextKanji: {0}")
-        public static List<String> data() {
-            String kanji = newUser1.get("fact_stripped").toString();
-            return Arrays.asList(kanji.split("")); // 日本語盛上
-        }
-
-        public ParameterizedTests(String parameterizedKanji) {
-            this.parameterizedKanji = parameterizedKanji;
-        }
-
-
         @Test
-        public void getNextKanji() throws Exception {
+        public void g_getNextKanji日() throws Exception {
             String expectedBody = factory.createObjectBuilder()
-                    .add("kanji", parameterizedKanji)
+                    .add("kanji", "日")
                     .add("words", newUser1.get("fact"))
                     .build()
                     .toString();
 
-            HttpResponse response = doGET("api/kanji");
+            HttpResponse response = doGET("/api/kanji");
             int status = response.getStatusLine().getStatusCode();
             String body = EntityUtils.toString(response.getEntity());
 
@@ -221,7 +204,108 @@ public class AppTest {
             Assert.assertEquals(expectedBody, body);
         }
 
-    }
+        @Test
+        public void h_getNextKanji本() throws Exception {
+            String expectedBody = factory.createObjectBuilder()
+                    .add("kanji", "本")
+                    .add("words", newUser1.get("fact"))
+                    .build()
+                    .toString();
 
+            HttpResponse response = doGET("/api/kanji");
+            int status = response.getStatusLine().getStatusCode();
+            String body = EntityUtils.toString(response.getEntity());
+
+            Assert.assertEquals(200, status);
+            Assert.assertEquals(expectedBody, body);
+        }
+
+        @Test
+        public void i_getNextKanji語() throws Exception {
+            String expectedBody = factory.createObjectBuilder()
+                    .add("kanji", "語")
+                    .add("words", newUser1.get("fact"))
+                    .build()
+                    .toString();
+
+            HttpResponse response = doGET("/api/kanji");
+            int status = response.getStatusLine().getStatusCode();
+            String body = EntityUtils.toString(response.getEntity());
+
+            Assert.assertEquals(200, status);
+            Assert.assertEquals(expectedBody, body);
+        }
+
+        @Test
+        public void j_getNextKanji盛() throws Exception {
+            String expectedBody = factory.createObjectBuilder()
+                    .add("kanji", "盛")
+                    .add("words", newUser1.get("fact"))
+                    .build()
+                    .toString();
+
+            HttpResponse response = doGET("/api/kanji");
+            int status = response.getStatusLine().getStatusCode();
+            String body = EntityUtils.toString(response.getEntity());
+
+            Assert.assertEquals(200, status);
+            Assert.assertEquals(expectedBody, body);
+        }
+
+        @Test
+        public void k_getNextKanji上() throws Exception {
+            String expectedBody = factory.createObjectBuilder()
+                    .add("kanji", "上")
+                    .add("words", newUser1.get("fact"))
+                    .build()
+                    .toString();
+
+            HttpResponse response = doGET("/api/kanji");
+            int status = response.getStatusLine().getStatusCode();
+            String body = EntityUtils.toString(response.getEntity());
+
+            Assert.assertEquals(200, status);
+            Assert.assertEquals(expectedBody, body);
+        }
+
+        @Test
+        public void l_getNextKanji_allDone() throws Exception {
+            HttpResponse response = doGET("/api/kanji");
+            int status = response.getStatusLine().getStatusCode();
+
+            Assert.assertEquals(404, status);
+        }
+
+        @Test
+        public void m_addMultipleWords() throws Exception {
+            JsonObject fact = factory.createObjectBuilder()
+                    .add("fact", newUser1.get("facts"))
+                    .build();
+
+            HttpResponse response = doPOST("/api/facts", fact);
+            int status = response.getStatusLine().getStatusCode();
+
+            Assert.assertEquals(201, status);
+        }
+
+        @Test
+        public void n_logout() throws Exception {
+            HttpResponse response = doPOST("/api/logout");
+            int status = response.getStatusLine().getStatusCode();
+
+            Assert.assertEquals(200, status);
+
+
+        }
+
+        @Test
+        public void o_getKanjiAfterLoggedOut() throws Exception {
+            HttpResponse response = doGET("/api/kanji");
+            int status = response.getStatusLine().getStatusCode();
+
+            Assert.assertEquals(403, status);
+        }
+
+    }
 
 }
