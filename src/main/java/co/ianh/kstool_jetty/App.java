@@ -24,10 +24,8 @@ public class App {
 
     public static Server makeServer() throws Exception {
         // Instantiate server
-        Server server = new Server();
-
-        // Configure port/host settings
-        configureConnector(server);
+        int port = getPort();
+        Server server = new Server(port);
 
         // Build context
         Handler servletHandler = buildServletHandler();
@@ -98,8 +96,6 @@ public class App {
 
     private static Handler buildServletHandler() throws Exception {
         ServletHandler handler = new ServletHandler();
-//        handler.addServletWithMapping(HelloServlet.class, "/bob/*");
-//        handler.addServletWithMapping(GoodbyeServlet.class, "/*");
 
         // Routes
         handler.addServletWithMapping(KanjiServlet.class, "/kanji");
@@ -107,7 +103,6 @@ public class App {
         handler.addServletWithMapping(SignupServlet.class, "/signup");
         handler.addServletWithMapping(LoginServlet.class, "/login");
         handler.addServletWithMapping(LogoutServlet.class, "/logout");
-
 
         return handler;
     }
