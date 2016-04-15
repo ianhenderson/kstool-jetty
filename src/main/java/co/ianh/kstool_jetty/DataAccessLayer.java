@@ -86,6 +86,27 @@ public class DataAccessLayer {
             stmtCache.put( "getRelatedWords",
                     c.prepareStatement("SELECT kanji, word FROM kanji_words AS kw, words AS w, seen_words AS sw WHERE kw.kanji = ? AND kw.word_id = w.id AND kw.word_id = sw.word_id AND sw.user_id = ?")
             );
+            stmtCache.put( "getUserQueue",
+                    c.prepareStatement("SELECT queue FROM study_queue WHERE user_id = ?")
+            );
+            stmtCache.put( "updateUserQueue",
+                    c.prepareStatement("UPDATE study_queue SET queue = ? WHERE user_id = ?")
+            );
+            stmtCache.put( "addToUserQueue",
+                    c.prepareStatement("INSERT INTO study_queue (user_id, queue) VALUES (?, ?)")
+            );
+            stmtCache.put( "addNewUserQueue",
+                    c.prepareStatement("INSERT OR IGNORE INTO study_queue (user_id, queue) SELECT id, ? FROM users WHERE name=?") // first ? will be "[]"
+            );
+            stmtCache.put( "addNewUser",
+                    c.prepareStatement("INSERT OR IGNORE INTO users (name, password, salt) VALUES (?, ?, ?)")
+            );
+            stmtCache.put( "getUserByName",
+                    c.prepareStatement("SELECT id, name, salt FROM users WHERE name = ?")
+            );
+            stmtCache.put( "getUserByPassword",
+                    c.prepareStatement("SELECT id, name FROM users WHERE password = ?")
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }
