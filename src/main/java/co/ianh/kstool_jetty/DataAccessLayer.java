@@ -1,5 +1,7 @@
 package co.ianh.kstool_jetty;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.sql.*;
 import java.util.HashMap;
 
@@ -105,7 +107,7 @@ public class DataAccessLayer {
                     c.prepareStatement("SELECT id, name, salt FROM users WHERE name = ?")
             );
             stmtCache.put( "getUserByPassword",
-                    c.prepareStatement("SELECT id, name FROM users WHERE password = ?")
+                    c.prepareStatement("SELECT id, name FROM users WHERE id = ? AND password = ?")
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,13 +118,61 @@ public class DataAccessLayer {
 
 
     public static int addKanji(String kanji) throws SQLException {
-        PreparedStatement stmt = null;
+        PreparedStatement addKanji = null;
         int updatedRows = 0;
 
-        stmt = stmtCache.get("addKanji");
-        stmt.setString(1, kanji);
-        updatedRows = stmt.executeUpdate();
+        addKanji = stmtCache.get("addKanji");
+        addKanji.setString(1, kanji);
+        updatedRows = addKanji.executeUpdate();
 
         return updatedRows;
+    }
+
+    public static boolean checkUser(String username, String plainPassword) throws SQLException {
+        boolean userChecked = false;
+        PreparedStatement getUserByName = null;
+
+        // 1) First, we get users with provided name.
+        getUserByName = stmtCache.get("getUserByName");
+        getUserByName.setString(1, username);
+        ResultSet maybeUser =  getUserByName.executeQuery();
+
+        if ( maybeUser.isBeforeFirst() ) { // Rows returned: https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html#isBeforeFirst--
+            maybeUser.first(); // move cursor to first row
+
+            // 2) If user in system, generate hash from provided password and retrieved salt.
+            int userId = maybeUser.getInt("id");
+            String salt = maybeUser.getString("salt");
+            String hash = BCrypt.hashpw(plainPassword, salt);
+
+            // 3) Check hash against password in DB.
+            userChecked = checkPassword(userId, hash);
+        }
+
+        return userChecked;
+    }
+
+    private static boolean checkPassword(int userId, String hashedPassword) throws SQLException {
+        PreparedStatement getUserByPassword = null;
+        getUserByPassword = stmtCache.get("getUserByPassword");
+        getUserByPassword.setInt(1, userId);
+        getUserByPassword.setString(2, hashedPassword);
+        ResultSet maybeUser = getUserByPassword.executeQuery();
+
+        return maybeUser.isBeforeFirst(); // rows exist -> true; no results -> false
+    }
+
+    public static boolean addUser(String username, String password) throws SQLException {
+        // 1) Generate salt for password (default is 10 rounds)
+        String salt = BCrypt.gensalt();
+        // 2) Generate hash of password + salt
+        String hash = BCrypt.hashpw(password, salt);
+        // 3) Save name, hash, salt to DB & create initial entry in study_queue
+        PreparedStatement addNewUser = null;
+        addNewUser = stmtCache.get("addNewUser");
+        addNewUser.setString(1, username);
+        addNewUser.setString(2, hash);
+        addNewUser.setString(3, salt);
+        return addNewUser.execute(); // TODO: get new user data and return to caller
     }
 }

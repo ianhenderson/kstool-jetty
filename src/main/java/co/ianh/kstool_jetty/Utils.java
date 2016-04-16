@@ -34,4 +34,8 @@ public class Utils {
                         "0.0.0.0";
         return hostname;
     }
+
+    public static String filterKanji(String s) {
+        return s.replaceAll("[^\\u4e00-\\u9faf]", "");
+    }
 }
