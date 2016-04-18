@@ -98,11 +98,12 @@ public class App {
         ServletHandler handler = new ServletHandler();
 
         // Routes
-        handler.addServletWithMapping(KanjiServlet.class, "/kanji");
-        handler.addServletWithMapping(FactsServlet.class, "/facts");
-        handler.addServletWithMapping(SignupServlet.class, "/signup");
-        handler.addServletWithMapping(LoginServlet.class, "/login");
-        handler.addServletWithMapping(LogoutServlet.class, "/logout");
+        handler.addServletWithMapping(KanjiServlet.class, "/api/kanji");
+        handler.addServletWithMapping(FactsServlet.class, "/api/facts");
+        handler.addServletWithMapping(SignupServlet.class, "/api/signup");
+        handler.addServletWithMapping(LoginServlet.class, "/api/login");
+        handler.addServletWithMapping(LogoutServlet.class, "/api/logout");
+        handler.addServletWithMapping(HelloServlet.class, "/*");
 
         return handler;
     }
