@@ -129,12 +129,21 @@ public class DataAccessLayer {
         return updatedRows;
     }
 
-    public static boolean checkUser(String username, String plainPassword) throws SQLException {
-        boolean userChecked = false;
-        PreparedStatement getUserByName = null;
+    public static boolean checkUserExists(String username) throws SQLException {
 
         // 1) First, we get users with provided name.
-        getUserByName = stmtCache.get("getUserByName");
+        PreparedStatement getUserByName = stmtCache.get("getUserByName");
+        getUserByName.setString(1, username);
+        ResultSet maybeUser =  getUserByName.executeQuery();
+
+        return maybeUser.isBeforeFirst();
+    }
+
+    public static boolean checkUsernameAndPassword(String username, String plainPassword) throws SQLException {
+        boolean userChecked = false;
+
+        // 1) First, we get users with provided name.
+        PreparedStatement getUserByName = stmtCache.get("getUserByName");
         getUserByName.setString(1, username);
         ResultSet maybeUser =  getUserByName.executeQuery();
 
@@ -147,13 +156,13 @@ public class DataAccessLayer {
             String hash = BCrypt.hashpw(plainPassword, salt);
 
             // 3) Check hash against password in DB.
-            userChecked = checkPassword(userId, hash);
+            userChecked = checkHashedPassword(userId, hash);
         }
 
         return userChecked;
     }
 
-    private static boolean checkPassword(int userId, String hashedPassword) throws SQLException {
+    private static boolean checkHashedPassword(int userId, String hashedPassword) throws SQLException {
         PreparedStatement getUserByPassword = null;
         getUserByPassword = stmtCache.get("getUserByPassword");
         getUserByPassword.setInt(1, userId);
@@ -163,7 +172,7 @@ public class DataAccessLayer {
         return maybeUser.isBeforeFirst(); // rows exist -> true; no results -> false
     }
 
-    public static boolean addUser(String username, String password) throws SQLException {
+    public static int addUser(String username, String password) throws SQLException {
         // 1) Generate salt for password (default is 10 rounds)
         String salt = BCrypt.gensalt();
         // 2) Generate hash of password + salt
@@ -174,6 +183,6 @@ public class DataAccessLayer {
         addNewUser.setString(1, username);
         addNewUser.setString(2, hash);
         addNewUser.setString(3, salt);
-        return addNewUser.execute(); // TODO: get new user data and return to caller
+        return addNewUser.executeUpdate(); // TODO: get new user data and return to caller
     }
 }

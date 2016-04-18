@@ -39,7 +39,7 @@ public class SignupServlet extends HttpServlet{
         String password = bodyData.get("password").toString();
         boolean userAlreadyExists = false;
         try {
-            userAlreadyExists = DataAccessLayer.checkUser(username, password);
+            userAlreadyExists = DataAccessLayer.checkUserExists(username);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -50,7 +50,7 @@ public class SignupServlet extends HttpServlet{
         }
 
         // 4) Otherwise, add to DB
-        boolean userAdded = false;
+        int userAdded = 0;
         try {
             userAdded = DataAccessLayer.addUser(username, password);
         } catch (SQLException e) {
