@@ -10,9 +10,16 @@ import java.util.HashMap;
  */
 public class DataAccessLayer {
 
-    private static final String DB_URL = "jdbc:sqlite:test.db";
-    private static Connection c = makeConnection();
-    private static HashMap<String, PreparedStatement> stmtCache = buildStatements();
+    private static final String DB_NAME = Config.filename;
+    private static final String DB_URL = "jdbc:sqlite:" + DB_NAME;
+    private static Connection c;
+    private static HashMap<String, PreparedStatement> stmtCache;
+
+    static {
+        c = makeConnection();
+        initTables();
+        stmtCache = buildStatements();
+    }
 
     // Set up DB connection
     private static Connection makeConnection() {
@@ -28,7 +35,7 @@ public class DataAccessLayer {
     }
 
     // Build basic schema
-    public static void initTables() throws SQLException {
+    private static void initTables() {
         Statement stmt = null;
         try {
             c.setAutoCommit(false);
@@ -56,7 +63,9 @@ public class DataAccessLayer {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.exit(0);
         } finally {
-            c.setAutoCommit(true);
+            try {
+                c.setAutoCommit(true);
+            } catch (SQLException e) { e.printStackTrace(); }
         }
         System.out.println("Created DB tables!");
     }

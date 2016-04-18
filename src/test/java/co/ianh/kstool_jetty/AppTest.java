@@ -34,25 +34,33 @@ public class AppTest {
     // http://stackoverflow.com/questions/26775984/junit-enclosed-runner-and-shared-setup
     abstract public static class SharedSetup {
 
-        static JsonBuilderFactory factory = Json.createBuilderFactory(null);
-        static JsonObject newUser1 = factory.createObjectBuilder()
-                .add("username", "ian")
-                .add("password", "ian123")
-                .add("fact", factory.createArrayBuilder()
-                        .add("日本語盛り上がりの")
-                )
-                .add("fact_stripped", "日本語盛上")
-                .add("facts", factory.createArrayBuilder()
-                        .add("名称は、")
-                        .add("宇宙の膨張を発見した天文学者・エドウィン")
-                        .add("ハッブルに因む。")
-                )
-                .add("facts_stripped", "名称宇宙膨張発見天文学者因")
-                .build();
+        static JsonBuilderFactory factory;
+        static JsonObject newUser1;
         static CloseableHttpClient client;
         static Server app;
+
         String HOSTNAME = "localhost";
         int PORT = 8000; // TODO: tightly coupled; app always runs on 8000
+
+
+        static {
+            System.setProperty("FACTLY", "test");
+            factory = Json.createBuilderFactory(null);
+            newUser1 = factory.createObjectBuilder()
+                    .add("username", "ian")
+                    .add("password", "ian123")
+                    .add("fact", factory.createArrayBuilder()
+                            .add("日本語盛り上がりの")
+                    )
+                    .add("fact_stripped", "日本語盛上")
+                    .add("facts", factory.createArrayBuilder()
+                            .add("名称は、")
+                            .add("宇宙の膨張を発見した天文学者・エドウィン")
+                            .add("ハッブルに因む。")
+                    )
+                    .add("facts_stripped", "名称宇宙膨張発見天文学者因")
+                    .build();
+        }
 
         // Start up server
         @Before
