@@ -172,17 +172,32 @@ public class DataAccessLayer {
         return maybeUser.isBeforeFirst(); // rows exist -> true; no results -> false
     }
 
-    public static int addUser(String username, String password) throws SQLException {
+    public static int addUser(String username, String plainPassword) throws SQLException {
         // 1) Generate salt for password (default is 10 rounds)
         String salt = BCrypt.gensalt();
         // 2) Generate hash of password + salt
-        String hash = BCrypt.hashpw(password, salt);
+        String hash = BCrypt.hashpw(plainPassword, salt);
         // 3) Save name, hash, salt to DB & create initial entry in study_queue
-        PreparedStatement addNewUser = null;
-        addNewUser = stmtCache.get("addNewUser");
+        PreparedStatement addNewUser = stmtCache.get("addNewUser");
+        PreparedStatement addNewUserQueue = stmtCache.get("addNewUserQueue");
+        String q = "[]";
+        int added = 0; // TODO: get new user data and return to caller
+
+        c.setAutoCommit(false);
+
         addNewUser.setString(1, username);
         addNewUser.setString(2, hash);
         addNewUser.setString(3, salt);
-        return addNewUser.executeUpdate(); // TODO: get new user data and return to caller
+
+        addNewUserQueue.setString(1, q);
+        addNewUserQueue.setString(2, username);
+
+        added += addNewUser.executeUpdate();
+        added += addNewUserQueue.executeUpdate();
+        c.commit();
+
+        c.setAutoCommit(true);
+
+        return added;
     }
 }
