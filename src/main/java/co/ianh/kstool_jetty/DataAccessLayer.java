@@ -10,8 +10,8 @@ import java.util.HashMap;
  */
 public class DataAccessLayer {
 
-    private static Connection c = makeConnection();
     private static final String DB_URL = "jdbc:sqlite:test.db";
+    private static Connection c = makeConnection();
     private static HashMap<String, PreparedStatement> stmtCache = buildStatements();
 
     // Set up DB connection
@@ -19,7 +19,6 @@ public class DataAccessLayer {
         Connection c = null;
         try {
             c = DriverManager.getConnection(DB_URL);
-            c.setAutoCommit(false);
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.exit(0);
@@ -29,9 +28,10 @@ public class DataAccessLayer {
     }
 
     // Build basic schema
-    public static void initTables() {
+    public static void initTables() throws SQLException {
         Statement stmt = null;
         try {
+            c.setAutoCommit(false);
             stmt = c.createStatement();
 
             // Table of user data
@@ -55,13 +55,15 @@ public class DataAccessLayer {
 //            c.rollback();
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.exit(0);
+        } finally {
+            c.setAutoCommit(true);
         }
         System.out.println("Created DB tables!");
     }
 
     // Create cache of prepared statements
     private static HashMap<String, PreparedStatement> buildStatements() {
-        HashMap<String, PreparedStatement> stmtCache = null;
+        HashMap<String, PreparedStatement> stmtCache = new HashMap<String, PreparedStatement>();
 
         try {
             stmtCache.put( "addKanji",
@@ -71,7 +73,7 @@ public class DataAccessLayer {
                     c.prepareStatement("INSERT OR IGNORE INTO kanji_words (kanji, word_id) VALUES (?, ?)")
             );
             stmtCache.put( "addKanjiWords_",
-                    c.prepareStatement("INSERT OR IGNORE INTO kanji_words (kanji, word_id) SELECT ? words.id FROM words WHERE words.word = ?")
+                    c.prepareStatement("INSERT OR IGNORE INTO kanji_words (kanji, word_id) SELECT ?, words.id FROM words WHERE words.word = ?")
             );
             stmtCache.put( "addSeenWords",
                     c.prepareStatement("INSERT INTO seen_words (user_id, word_id) VALUES (?, ?)")
@@ -118,10 +120,9 @@ public class DataAccessLayer {
 
 
     public static int addKanji(String kanji) throws SQLException {
-        PreparedStatement addKanji = null;
         int updatedRows = 0;
 
-        addKanji = stmtCache.get("addKanji");
+        PreparedStatement addKanji = stmtCache.get("addKanji");
         addKanji.setString(1, kanji);
         updatedRows = addKanji.executeUpdate();
 
@@ -138,7 +139,7 @@ public class DataAccessLayer {
         ResultSet maybeUser =  getUserByName.executeQuery();
 
         if ( maybeUser.isBeforeFirst() ) { // Rows returned: https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html#isBeforeFirst--
-            maybeUser.first(); // move cursor to first row
+            maybeUser.next(); // move cursor to first row
 
             // 2) If user in system, generate hash from provided password and retrieved salt.
             int userId = maybeUser.getInt("id");
