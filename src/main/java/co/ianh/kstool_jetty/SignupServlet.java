@@ -58,7 +58,8 @@ public class SignupServlet extends HttpServlet{
         }
 
         // 5) Then get user info to pass back
-        String responseBody = DataAccessLayer.checkUsernameAndPassword(username, password);
+        JsonObject responseBodyObject = DataAccessLayer.checkUsernameAndPassword(username, password);
+        String responseBody = responseBodyObject.toString();
 
         resp.setStatus(HttpServletResponse.SC_CREATED);
         resp.getWriter().println(responseBody);

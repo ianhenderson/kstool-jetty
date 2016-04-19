@@ -4,6 +4,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import javax.json.Json;
 import javax.json.JsonBuilderFactory;
+import javax.json.JsonObject;
 import java.sql.*;
 import java.util.HashMap;
 
@@ -151,9 +152,9 @@ public class DataAccessLayer {
         return maybeUser.isBeforeFirst();
     }
 
-    public static String checkUsernameAndPassword(String username, String plainPassword) {
+    public static JsonObject checkUsernameAndPassword(String username, String plainPassword) {
         boolean userChecked = false;
-        String result = null;
+        JsonObject result = null;
         try {
             // 1) First, we get users with provided name.
             PreparedStatement getUserByName = stmtCache.get("getUserByName");
@@ -176,8 +177,7 @@ public class DataAccessLayer {
                 result = factory.createObjectBuilder()
                         .add("id", maybeUser.getInt("id"))
                         .add("name", maybeUser.getString("name"))
-                        .build()
-                        .toString();
+                        .build();
             }
 
         } catch (SQLException e) { }
