@@ -26,7 +26,7 @@ public class Config {
                 port = 3000;
                 break;
             case "test":
-                filename = "mock.db";
+                filename = ""; // use in-memory db file
                 port = 3001;
                 break;
         }
