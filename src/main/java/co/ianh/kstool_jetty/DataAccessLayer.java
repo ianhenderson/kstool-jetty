@@ -2,6 +2,8 @@ package co.ianh.kstool_jetty;
 
 import org.mindrot.jbcrypt.BCrypt;
 
+import javax.json.Json;
+import javax.json.JsonBuilderFactory;
 import java.sql.*;
 import java.util.HashMap;
 
@@ -14,6 +16,7 @@ public class DataAccessLayer {
     private static final String DB_URL = "jdbc:sqlite:" + DB_NAME;
     private static Connection c;
     private static HashMap<String, PreparedStatement> stmtCache;
+    static JsonBuilderFactory factory = Json.createBuilderFactory(null);
 
     static {
         c = makeConnection();
@@ -148,27 +151,39 @@ public class DataAccessLayer {
         return maybeUser.isBeforeFirst();
     }
 
-    public static boolean checkUsernameAndPassword(String username, String plainPassword) throws SQLException {
+    public static String checkUsernameAndPassword(String username, String plainPassword) {
         boolean userChecked = false;
+        String result = null;
+        try {
+            // 1) First, we get users with provided name.
+            PreparedStatement getUserByName = stmtCache.get("getUserByName");
+            getUserByName.setString(1, username);
+            ResultSet maybeUser =  getUserByName.executeQuery();
 
-        // 1) First, we get users with provided name.
-        PreparedStatement getUserByName = stmtCache.get("getUserByName");
-        getUserByName.setString(1, username);
-        ResultSet maybeUser =  getUserByName.executeQuery();
+            if ( maybeUser.isBeforeFirst() ) { // Rows returned: https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html#isBeforeFirst--
+                maybeUser.next(); // move cursor to first row
 
-        if ( maybeUser.isBeforeFirst() ) { // Rows returned: https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html#isBeforeFirst--
-            maybeUser.next(); // move cursor to first row
+                // 2) If user in system, generate hash from provided password and retrieved salt.
+                int userId = maybeUser.getInt("id");
+                String salt = maybeUser.getString("salt");
+                String hash = BCrypt.hashpw(plainPassword, salt);
 
-            // 2) If user in system, generate hash from provided password and retrieved salt.
-            int userId = maybeUser.getInt("id");
-            String salt = maybeUser.getString("salt");
-            String hash = BCrypt.hashpw(plainPassword, salt);
+                // 3) Check hash against password in DB.
+                userChecked = checkHashedPassword(userId, hash);
+            }
 
-            // 3) Check hash against password in DB.
-            userChecked = checkHashedPassword(userId, hash);
-        }
+            if (userChecked) {
+                result = factory.createObjectBuilder()
+                        .add("id", maybeUser.getInt("id"))
+                        .add("name", maybeUser.getString("name"))
+                        .build()
+                        .toString();
+            }
 
-        return userChecked;
+        } catch (SQLException e) { }
+
+
+        return result;
     }
 
     private static boolean checkHashedPassword(int userId, String hashedPassword) throws SQLException {

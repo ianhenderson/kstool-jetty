@@ -139,7 +139,7 @@ public class AppTest {
             String body = EntityUtils.toString(response.getEntity());
 
             Assert.assertEquals(201, status);
-            Assert.assertEquals(expectedResponseBody, body);
+            Assert.assertEquals(expectedResponseBody, body.trim());
         }
 
         @Test

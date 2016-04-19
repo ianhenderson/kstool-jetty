@@ -56,7 +56,11 @@ public class SignupServlet extends HttpServlet{
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        // 5) Then get user info to pass back
+        String responseBody = DataAccessLayer.checkUsernameAndPassword(username, password);
+
         resp.setStatus(HttpServletResponse.SC_CREATED);
-        resp.getWriter().println(userAdded);
+        resp.getWriter().println(responseBody);
     }
 }
