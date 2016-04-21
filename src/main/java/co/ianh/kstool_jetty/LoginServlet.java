@@ -19,7 +19,7 @@ public class LoginServlet extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-//        HttpSession session = req.getSession();
+        HttpSession session = req.getSession();
 
         // 1) Get data from POST body (username, password)
         String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
@@ -46,6 +46,9 @@ public class LoginServlet extends HttpServlet{
         if (responseBodyObject != null) {
             responseBody = responseBodyObject.toString();
             status = HttpServletResponse.SC_OK;
+            // save to session
+            session.setAttribute("id", responseBodyObject.getInt("id"));
+            session.setAttribute("name", responseBodyObject.getString("name"));
         } else {
             responseBody = "Error: username / password incorrect.";
             status = HttpServletResponse.SC_FORBIDDEN;

@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 
 import static co.ianh.kstool_jetty.Utils.getHost;
@@ -95,15 +96,15 @@ public class App {
     }
 
     private static Handler buildServletHandler() throws Exception {
-        ServletHandler handler = new ServletHandler();
+        ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
 
         // Routes
-        handler.addServletWithMapping(KanjiServlet.class, "/api/kanji");
-        handler.addServletWithMapping(FactsServlet.class, "/api/facts");
-        handler.addServletWithMapping(SignupServlet.class, "/api/signup");
-        handler.addServletWithMapping(LoginServlet.class, "/api/login");
-        handler.addServletWithMapping(LogoutServlet.class, "/api/logout");
-        handler.addServletWithMapping(HelloServlet.class, "/*");
+        handler.addServlet(KanjiServlet.class, "/api/kanji");
+        handler.addServlet(FactsServlet.class, "/api/facts");
+        handler.addServlet(SignupServlet.class, "/api/signup");
+        handler.addServlet(LoginServlet.class, "/api/login");
+        handler.addServlet(LogoutServlet.class, "/api/logout");
+        handler.addServlet(HelloServlet.class, "/*");
 
         return handler;
     }
