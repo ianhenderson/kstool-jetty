@@ -20,23 +20,30 @@ public class LoginServlet extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
+        // 1) If session already exists, return 200
+        if ( session.getAttribute("id") != null && session.getAttribute("name") != null ) {
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().println("Already logged in as " + session.getAttribute("name"));
+            return;
+        }
 
-        // 1) Get data from POST body (username, password)
+
+        // 2) Get data from POST body (username, password)
         String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 
-        // 1.1) Parse string into JSON object
+        // 3) Parse string into JSON object
         JsonReader jsonReader = Json.createReader(new StringReader(body));
         JsonObject bodyData = jsonReader.readObject();
         jsonReader.close();
 
-        // 2) Validate request body
+        // 4) Validate request body
         if ( !bodyData.containsKey("username") || !bodyData.containsKey("password") ) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().println("Error: POST must include a username and password.");
             return;
         }
 
-        // 3) Check whether user exists, and return 409 if so
+        // 5) Check whether user exists, and return 409 if so
         String username = bodyData.get("username").toString();
         String password = bodyData.get("password").toString();
         String responseBody;
