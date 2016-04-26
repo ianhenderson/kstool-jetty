@@ -2,11 +2,13 @@ package co.ianh.kstool_jetty;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import javax.json.Json;
-import javax.json.JsonBuilderFactory;
-import javax.json.JsonObject;
+import javax.json.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by henderson_i on 4/4/16.
@@ -140,6 +142,95 @@ public class DataAccessLayer {
         updatedRows = addKanji.executeUpdate();
 
         return updatedRows;
+    }
+
+    public static int addWords(int userId, JsonValue facts) {
+        // Prepared statements
+        PreparedStatement addWordToWordsTable = stmtCache.get("addWordToWordsTable");
+        PreparedStatement addSeenWords_ = stmtCache.get("addSeenWords_");
+        PreparedStatement addKanji = stmtCache.get("addKanji");
+        PreparedStatement addKanjiWords_ = stmtCache.get("addKanjiWords_");
+        PreparedStatement addSeenKanji = stmtCache.get("addSeenKanji");
+
+        ArrayList<String> allSeenKanji = new ArrayList<String>();
+        JsonArray factsList;
+
+        // Cast facts to array if not one
+        if (facts.getValueType().name() == "ARRAY") {
+            factsList = (JsonArray) facts;
+        } else if (facts.getValueType().name() == "STRING") {
+            factsList = Json.createArrayBuilder()
+                    .add(facts)
+                    .build();
+        } else {
+            // Error ?
+            return 0;
+        }
+
+        try {
+            // BEGIN TRANSACTION
+            c.setAutoCommit(false);
+
+            factsList.forEach((word)-> {
+                try {
+                    String cleanWord = Utils.filterKanji(word.toString());
+                    allSeenKanji.add(cleanWord); // save big list for later
+                    List<String> kanjiArray = Arrays.asList(cleanWord.split("")); //TODO: ???
+
+                    // 1) Add word to words table
+                    addWordToWordsTable.setString(1, word.toString());
+                    addWordToWordsTable.executeUpdate();
+                    // 2) Add to seen words table for current user_id
+                    addSeenWords_.setInt(1, userId);
+                    addSeenWords_.setString(2, word.toString());
+                    addSeenWords_.executeUpdate();
+
+                    // 3. For each kanji in the word...
+                    kanjiArray.forEach((kanji)-> {
+                        try {
+                            // 3a. Add kanji to 'kanji' table...
+                            addKanji.setString(1, kanji);
+                            addKanji.executeUpdate();
+                            // 3b. Add relationship to kanji_words junction table.
+                            addKanjiWords_.setString(1, kanji);
+                            addKanjiWords_.setString(2, word.toString());
+                            addKanjiWords_.executeUpdate();
+                            // 3c. Add to seen tables for current user_id
+                            addSeenKanji.setInt(1, userId);
+                            addSeenKanji.setString(2, kanji);
+                            addSeenKanji.executeUpdate();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            // COMMIT
+            c.commit();
+            // 4. Add kanji to 'study_queue' table...
+            enqueue(userId, allSeenKanji);
+
+            c.setAutoCommit(true);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 1;
+
+    }
+
+    public static int enqueue(int userId, List kanjiArray) {
+        PreparedStatement getUserQueue = stmtCache.get("getUserQueue");
+        PreparedStatement updateUserQueue = stmtCache.get("updateUserQueue");
+        PreparedStatement addToUserQueue = stmtCache.get("addToUserQueue");
+
+
+        return 1;
+
     }
 
     public static boolean checkUserExists(String username) throws SQLException {
