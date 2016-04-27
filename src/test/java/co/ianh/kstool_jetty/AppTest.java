@@ -173,11 +173,12 @@ public class AppTest {
             String body = EntityUtils.toString(response.getEntity());
 
             Assert.assertEquals(200, status);
-            Assert.assertEquals(expectedResponseBody, body);
+            Assert.assertEquals(expectedResponseBody.trim(), body.trim());
         }
 
         @Test
         public void e_getKanjiWhenListIsEmpty() throws Exception {
+            d_signInWithCorrectInfo();
             HttpResponse response = doGET("/api/kanji");
             int status = response.getStatusLine().getStatusCode();
 
@@ -186,6 +187,7 @@ public class AppTest {
 
         @Test
         public void f_addWords() throws Exception {
+            d_signInWithCorrectInfo();
             JsonObject fact = factory.createObjectBuilder()
                     .add("fact", newUser1.get("fact"))
                     .build();
@@ -198,6 +200,7 @@ public class AppTest {
 
         @Test
         public void g_getNextKanji日() throws Exception {
+            d_signInWithCorrectInfo();
             String expectedBody = factory.createObjectBuilder()
                     .add("kanji", "日")
                     .add("words", newUser1.get("fact"))
@@ -209,11 +212,12 @@ public class AppTest {
             String body = EntityUtils.toString(response.getEntity());
 
             Assert.assertEquals(200, status);
-            Assert.assertEquals(expectedBody, body);
+            Assert.assertEquals(expectedBody.trim(), body.trim());
         }
 
         @Test
         public void h_getNextKanji本() throws Exception {
+            d_signInWithCorrectInfo();
             String expectedBody = factory.createObjectBuilder()
                     .add("kanji", "本")
                     .add("words", newUser1.get("fact"))
@@ -225,11 +229,12 @@ public class AppTest {
             String body = EntityUtils.toString(response.getEntity());
 
             Assert.assertEquals(200, status);
-            Assert.assertEquals(expectedBody, body);
+            Assert.assertEquals(expectedBody.trim(), body.trim());
         }
 
         @Test
         public void i_getNextKanji語() throws Exception {
+            d_signInWithCorrectInfo();
             String expectedBody = factory.createObjectBuilder()
                     .add("kanji", "語")
                     .add("words", newUser1.get("fact"))
@@ -241,11 +246,12 @@ public class AppTest {
             String body = EntityUtils.toString(response.getEntity());
 
             Assert.assertEquals(200, status);
-            Assert.assertEquals(expectedBody, body);
+            Assert.assertEquals(expectedBody.trim(), body.trim());
         }
 
         @Test
         public void j_getNextKanji盛() throws Exception {
+            d_signInWithCorrectInfo();
             String expectedBody = factory.createObjectBuilder()
                     .add("kanji", "盛")
                     .add("words", newUser1.get("fact"))
@@ -257,11 +263,12 @@ public class AppTest {
             String body = EntityUtils.toString(response.getEntity());
 
             Assert.assertEquals(200, status);
-            Assert.assertEquals(expectedBody, body);
+            Assert.assertEquals(expectedBody.trim(), body.trim());
         }
 
         @Test
         public void k_getNextKanji上() throws Exception {
+            d_signInWithCorrectInfo();
             String expectedBody = factory.createObjectBuilder()
                     .add("kanji", "上")
                     .add("words", newUser1.get("fact"))
@@ -273,11 +280,12 @@ public class AppTest {
             String body = EntityUtils.toString(response.getEntity());
 
             Assert.assertEquals(200, status);
-            Assert.assertEquals(expectedBody, body);
+            Assert.assertEquals(expectedBody.trim(), body.trim());
         }
 
         @Test
         public void l_getNextKanji_allDone() throws Exception {
+            d_signInWithCorrectInfo();
             HttpResponse response = doGET("/api/kanji");
             int status = response.getStatusLine().getStatusCode();
 
@@ -286,6 +294,7 @@ public class AppTest {
 
         @Test
         public void m_addMultipleWords() throws Exception {
+            d_signInWithCorrectInfo();
             JsonObject fact = factory.createObjectBuilder()
                     .add("fact", newUser1.get("facts"))
                     .build();
@@ -298,6 +307,7 @@ public class AppTest {
 
         @Test
         public void n_logout() throws Exception {
+            d_signInWithCorrectInfo();
             HttpResponse response = doPOST("/api/logout");
             int status = response.getStatusLine().getStatusCode();
 
