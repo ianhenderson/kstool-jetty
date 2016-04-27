@@ -20,11 +20,15 @@ public class FactsServlet extends HttpServlet{
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Check for session and return if none
+        // 1) Check for session and return if none
         boolean isAuthorized = CheckSession.check(req, resp);
         if (!isAuthorized) {
             return;
         }
+
+        // 2) Fetch words for this user
+        // TODO
+
         String method = req.getMethod();
         String uri = req.getRequestURI();
         resp.setStatus(HttpServletResponse.SC_OK);

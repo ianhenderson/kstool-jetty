@@ -133,6 +133,80 @@ public class DataAccessLayer {
         return stmtCache;
     }
 
+    public static JsonObject getNextKanjiAndRelatedWords(int userId) throws SQLException {
+        String nextKanji = getNextKanjiFromQueue(userId);
+        List<String> relatedWords = getSeenWordsRelatedToKanji(userId, nextKanji);
+
+        // Convert list -> JSONArray
+        JsonArrayBuilder relatedWordsJSON = Json.createArrayBuilder();
+        relatedWords.forEach((word)-> {
+            relatedWordsJSON.add(word);
+        });
+
+        return Json.createObjectBuilder()
+                .add("kanji", nextKanji)
+                .add("words", relatedWordsJSON)
+                .build();
+    }
+
+    private static String getNextKanjiFromQueue(int userId) throws SQLException {
+        String nextKanji = null;
+
+        // 1) Get next kanji from user queue
+        PreparedStatement getUserQueue = stmtCache.get("getUserQueue");
+        getUserQueue.setInt(1, userId);
+        ResultSet resultSet = getUserQueue.executeQuery();
+        resultSet.next();
+        String q = resultSet.getString("queue");
+
+        // 2) Transform results into JSON
+        JsonArray oldUserQueue = (JsonArray) Utils.string2json(q);
+
+        // 3) Get last item from JSON array
+        int ind = oldUserQueue.size() - 1;
+        if (ind < 0) { ind = 0; }
+        nextKanji = oldUserQueue.get(ind).toString();
+
+        // 4) Update queue with new list
+        String newUserQueue;
+        if (oldUserQueue.size() > 0) {
+            JsonArrayBuilder newQueueJsonBuilder = Json.createArrayBuilder();
+            for (int i = 0; i < oldUserQueue.size() - 1; i++) {
+                String kanji = oldUserQueue.get(i).toString();
+                newQueueJsonBuilder.add(kanji);
+            }
+            newUserQueue = newQueueJsonBuilder.build().toString();
+        } else {
+            newUserQueue = oldUserQueue.toString();
+        }
+
+        // 5) Save back to database
+        PreparedStatement updateUserQueue = stmtCache.get("updateUserQueue");
+        updateUserQueue.setString(1, newUserQueue);
+        updateUserQueue.setInt(2, userId);
+        updateUserQueue.executeUpdate();
+
+        return nextKanji;
+    }
+
+    private static List<String> getSeenWordsRelatedToKanji(int userId, String kanji) throws SQLException {
+        String seenRelatedWords = null;
+
+        // 1) Get words related to `kanji` for this `userId`, that have already been seen by that user
+        PreparedStatement getRelatedWords = stmtCache.get("getRelatedWords");
+        getRelatedWords.setString(1, kanji);
+        getRelatedWords.setInt(2, userId);
+        ResultSet resultSet = getRelatedWords.executeQuery();
+
+        // 2) Convert resultSet into List
+        List<String> words = new ArrayList();
+        while (resultSet.next()) {
+            String word = resultSet.getString("word");
+            words.add(word);
+        }
+
+        return words;
+    }
 
     public static int addKanji(String kanji) throws SQLException {
         int updatedRows = 0;
@@ -331,6 +405,7 @@ public class DataAccessLayer {
         addNewUserQueue.setString(1, q);
         addNewUserQueue.setString(2, username);
 
+        // TODO: return something that makes sense from this method
         added += addNewUser.executeUpdate();
         added += addNewUserQueue.executeUpdate();
         c.commit();
