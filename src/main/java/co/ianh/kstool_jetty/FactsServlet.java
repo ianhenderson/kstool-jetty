@@ -55,6 +55,7 @@ public class FactsServlet extends HttpServlet{
             // 4) Add to database and respond with 200
             DataAccessLayer.addWords(userId, facts);
             resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.setContentType("text/html; charset=UTF-8");
             resp.getWriter().println("Success! Fact added to " + userName + "'s collection: " + facts.toString());
 
         }
