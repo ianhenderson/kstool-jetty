@@ -1,3 +1,3 @@
 [submodule "kstool-client"]
 	path = kstool-client
-	url = git@github.com:ianhenderson/kstool-client.git
+	url = https://github.com/ianhenderson/kstool-client.git
