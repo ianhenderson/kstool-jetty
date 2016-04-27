@@ -6,6 +6,7 @@ package co.ianh.kstool_jetty;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonStructure;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.StringReader;
@@ -53,11 +54,18 @@ public class Utils {
         }
 
         // 2) Parse string into JSON object
-        JsonReader jsonReader = Json.createReader(new StringReader(body));
-        JsonObject bodyData = jsonReader.readObject();
-        jsonReader.close();
+        JsonObject bodyData = (JsonObject) string2json(body);
 
         return  bodyData;
+    }
+
+    public static JsonStructure string2json(String input) {
+        JsonReader jsonReader = Json.createReader(new StringReader(input));
+        JsonStructure jsonResult = jsonReader.read();
+        jsonReader.close();
+
+        return  jsonResult;
+
     }
 
     public static String filterKanji(String s) {
