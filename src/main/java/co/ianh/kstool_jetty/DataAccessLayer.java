@@ -223,13 +223,37 @@ public class DataAccessLayer {
 
     }
 
-    public static int enqueue(int userId, List kanjiArray) {
+    public static int enqueue(int userId, List kanjiArray) throws SQLException {
         PreparedStatement getUserQueue = stmtCache.get("getUserQueue");
         PreparedStatement updateUserQueue = stmtCache.get("updateUserQueue");
-        PreparedStatement addToUserQueue = stmtCache.get("addToUserQueue");
 
+        // 1) Get user queue
+        getUserQueue.setInt(1, userId);
+        ResultSet userQueue = getUserQueue.executeQuery();
 
-        return 1;
+        // 1.1) Transform results into JSON
+        userQueue.next();
+        String q = userQueue.getString("queue");
+        JsonArray oldQueueJson = (JsonArray) Utils.string2json(q);
+
+        // 1.2) Move old results into new queue
+        JsonArrayBuilder newQueueJsonBuilder = Json.createArrayBuilder();
+        oldQueueJson.forEach((kanji)-> {
+            newQueueJsonBuilder.add(kanji);
+        });
+
+        // 2) Update queue with new items
+        kanjiArray.forEach((kanji)-> {
+            newQueueJsonBuilder.add(kanji.toString());
+        });
+
+        // 3) Save back to database
+        String newQueue = newQueueJsonBuilder.build().toString();
+        updateUserQueue.setString(1, newQueue);
+        updateUserQueue.setInt(2, userId);
+        int updatedRows = updateUserQueue.executeUpdate();
+
+        return updatedRows;
 
     }
 
