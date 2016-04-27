@@ -23,7 +23,7 @@ public class KanjiServlet extends HttpServlet{
         // 2) Fetch next queued kanji, related words for this user
         HttpSession session = req.getSession();
         int userId = (int) session.getAttribute("id");
-        JsonObject kanjiAndWords = null;
+        String kanjiAndWords = null;
         try {
             kanjiAndWords = DataAccessLayer.getNextKanjiAndRelatedWords(userId);
         } catch (SQLException e) {
@@ -38,7 +38,7 @@ public class KanjiServlet extends HttpServlet{
             bodyResponse = "Nothing more to study.";
         } else {
             status = 200;
-            bodyResponse = kanjiAndWords.toString();
+            bodyResponse = kanjiAndWords;
             resp.setContentType("application/json; charset=UTF-8");
         }
 

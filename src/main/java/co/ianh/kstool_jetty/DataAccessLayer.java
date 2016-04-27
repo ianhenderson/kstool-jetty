@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * Created by henderson_i on 4/4/16.
@@ -133,8 +132,11 @@ public class DataAccessLayer {
         return stmtCache;
     }
 
-    public static JsonObject getNextKanjiAndRelatedWords(int userId) throws SQLException {
+    public static String getNextKanjiAndRelatedWords(int userId) throws SQLException {
         String nextKanji = getNextKanjiFromQueue(userId);
+        if (nextKanji == null) {
+            return nextKanji;
+        }
         List<String> relatedWords = getSeenWordsRelatedToKanji(userId, nextKanji);
 
         // Convert list -> JSONArray
@@ -146,7 +148,8 @@ public class DataAccessLayer {
         return Json.createObjectBuilder()
                 .add("kanji", nextKanji)
                 .add("words", relatedWordsJSON)
-                .build();
+                .build()
+                .toString();
     }
 
     private static String getNextKanjiFromQueue(int userId) throws SQLException {
@@ -163,9 +166,10 @@ public class DataAccessLayer {
         JsonArray oldUserQueue = (JsonArray) Utils.string2json(q);
 
         // 3) Get last item from JSON array
-        int ind = oldUserQueue.size() - 1;
-        if (ind < 0) { ind = 0; }
-        nextKanji = oldUserQueue.get(ind).toString();
+        if (oldUserQueue.size() > 0) {
+            int ind = oldUserQueue.size() - 1;
+            nextKanji = oldUserQueue.get(ind).toString();
+        }
 
         // 4) Update queue with new list
         String newUserQueue;
@@ -226,7 +230,6 @@ public class DataAccessLayer {
         PreparedStatement addKanjiWords_ = stmtCache.get("addKanjiWords_");
         PreparedStatement addSeenKanji = stmtCache.get("addSeenKanji");
 
-        ArrayList<String> allSeenKanji = new ArrayList<String>();
         JsonArray factsList;
 
         // Cast facts to array if not one
@@ -244,12 +247,14 @@ public class DataAccessLayer {
         try {
             // BEGIN TRANSACTION
             c.setAutoCommit(false);
+            List<String> kanjis = null;
 
-            factsList.forEach((word)-> {
+            for (JsonValue word : factsList) {
                 try {
+                    // Clean non-kanji characters from word
                     String cleanWord = Utils.filterKanji(word.toString());
-                    allSeenKanji.add(cleanWord); // save big list for later
-                    List<String> kanjiArray = Arrays.asList(cleanWord.split("")); //TODO: ???
+                    // Convert cleaned word -> array
+                    kanjis = Arrays.asList(cleanWord.split(""));
 
                     // 1) Add word to words table
                     addWordToWordsTable.setString(1, word.toString());
@@ -260,7 +265,7 @@ public class DataAccessLayer {
                     addSeenWords_.executeUpdate();
 
                     // 3. For each kanji in the word...
-                    kanjiArray.forEach((kanji)-> {
+                    for (String kanji : kanjis) {
                         try {
                             // 3a. Add kanji to 'kanji' table...
                             addKanji.setString(1, kanji);
@@ -276,18 +281,19 @@ public class DataAccessLayer {
                         } catch (SQLException e) {
                             e.printStackTrace();
                         }
-                    });
+                    };
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-            });
+            };
 
             // COMMIT
             c.commit();
-            // 4. Add kanji to 'study_queue' table...
-            enqueue(userId, allSeenKanji);
-
             c.setAutoCommit(true);
+
+            // 4. Add kanji to 'study_queue' table...
+            enqueue(userId, kanjis);
+
 
         } catch (SQLException e) {
             e.printStackTrace();
